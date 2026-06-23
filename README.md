@@ -1,4 +1,5 @@
-<img width="1920" height="1080" alt="2026-06-20_19-16-17" src="https://github.com/user-attachments/assets/5c14729c-cbd5-4778-8ee7-594828da0ec7" />
+<img width="1920" height="1080" alt="2026-06-24_01-04-47" src="https://github.com/user-attachments/assets/e6fbbf22-4aa4-4746-ab0a-9ff7cf6619e1" />
+
 #Free-Search
 
 Я Fortaki создал отечественный браузер для Кыргызстана,  если вам интересно то сможете ли вы найти посхалки в браузере, оцените сами как вам браузер и достоин ли он?
