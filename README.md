@@ -1,3 +1,5 @@
+<img width="1920" height="1080" alt="2026-06-25_01-27-19" src="https://github.com/user-attachments/assets/a0a43dd3-f6ac-46bb-b502-02cfd9836715" />
+Дисклеймер - это VirusTotal я доказываю что .exe безопасен для использования, я не использовал вирусы или посторонний софт
 <img width="1920" height="1080" alt="2026-06-24_01-04-47" src="https://github.com/user-attachments/assets/e6fbbf22-4aa4-4746-ab0a-9ff7cf6619e1" />
 
 #Free-Search
