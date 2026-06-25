@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Search • Поиск</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: #0a0f14;
+            color: #eef2ff;
+            min-height: 100vh;
+            padding: 2rem;
+            transition: background 0.3s ease, background-image 0.3s ease;
+            background-size: cover;
+            background-position: center;
+        }
+        .container { max-width: 1100px; width: 100%; margin: 0 auto; animation: fadeIn 0.2s ease; text-align: center; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== МЕНЮ (гамбургер) ===== */
+        #menuButton {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 1000;
+            background: rgba(30,41,54,0.7);
+            backdrop-filter: blur(8px);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(110,255,170,0.3);
+            transition: 0.2s;
+            color: #6effaa;
+        }
+        #menuButton:hover { background: #6effaa; color: #0a0f14; transform: scale(1.05); }
+        #menuDropdown {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: rgba(17,24,34,0.95);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 1rem 0;
+            min-width: 220px;
+            border: 1px solid rgba(110,255,170,0.2);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+            flex-direction: column;
+        }
+        #menuDropdown.active { display: flex; }
+        .menu-item {
+            padding: 0.8rem 1.8rem;
+            color: #eef2ff;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+        .menu-item:hover { background: rgba(110,255,170,0.15); color: #6effaa; }
+        .menu-item .icon { font-size: 1.4rem; }
+
+        /* ===== МОДАЛЬНЫЕ ОКНА ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #1e2936;
+            border-radius: 40px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(110,255,170,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .modal h2 { color: #6effaa; margin-bottom: 1.5rem; }
+        .modal label { display: block; margin: 0.8rem 0 0.3rem; font-weight: 600; }
+        .modal input, .modal select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border-radius: 30px;
+            border: 1px solid #334155;
+            background: #0f1724;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        .modal input:focus { border-color: #6effaa; }
+        .modal .btn {
+            background: #2c3e50;
+            color: #6effaa;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+        .modal .btn:hover { background: #6effaa; color: #0a0f14; }
+        .modal .close-btn {
+            float: right;
+            background: transparent;
+            border: none;
+            color: #8aa1b9;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+        .modal .close-btn:hover { color: #ff6b6b; }
+
+        /* превью фона */
+        .bg-preview-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .bg-preview-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.2s;
+        }
+        .bg-preview-item:hover { transform: scale(1.05); }
+        .bg-preview-item.active { border-color: #6effaa; }
+
+        /* ===== ПЛАВАЮЩЕЕ ВИДЕО-ОКНО ===== */
+        #videoFloat {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 480px;
+            max-width: 90vw;
+            background: #1e2936;
+            border-radius: 24px;
+            padding: 0.8rem;
+            border: 1px solid #6effaa;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+            z-index: 3000;
+            display: none;
+            flex-direction: column;
+            min-width: 320px;
+            min-height: 240px;
+            resize: both;
+            overflow: auto;
+        }
+        #videoFloat .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            cursor: grab;
+            flex-shrink: 0;
+        }
+        #videoFloat .header span { font-weight: bold; color: #6effaa; font-size: 1rem; }
+        #videoFloat .header .controls {
+            display: flex;
+            gap: 8px;
+        }
+        #videoFloat .header .controls button {
+            background: transparent;
+            border: none;
+            color: #eef2ff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 0 4px;
+        }
+        #videoFloat .header .controls button:hover { color: #6effaa; transform: scale(1.1); }
+        #videoFloat .header .close-video {
+            background: transparent;
+            border: none;
+            color: #ff6b6b;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        #videoFloat .header .close-video:hover { color: #ff4444; }
+        #videoFloat iframe {
+            flex: 1;
+            width: 100%;
+            min-height: 280px;
+            border-radius: 16px;
+            border: none;
+            background: #000;
+        }
+        #videoFloat .input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 0.8rem;
+            flex-shrink: 0;
+        }
+        #videoFloat .input-row input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            border: 1px solid #334155;
+            background: #0f1724;
+            color: white;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        #videoFloat .input-row input:focus { border-color: #6effaa; }
+        #videoFloat .input-row button {
+            background: #2c3e50;
+            border: none;
+            padding: 0 1.5rem;
+            border-radius: 30px;
+            color: #6effaa;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        #videoFloat .input-row button:hover { background: #6effaa; color: #0a0f14; }
+
+        /* ===== ВИДЖЕТЫ (ОДНА ЛИНИЯ) ===== */
+        .services-block {
+            background: rgba(17, 24, 34, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 1.8rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(110, 255, 170, 0.3);
+        }
+        .services-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.2rem;
+        }
+        .widget-card {
+            background: rgba(30, 41, 54, 0.8);
+            backdrop-filter: blur(4px);
+            border-radius: 28px;
+            padding: 1rem 1.5rem;
+            width: 180px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.25s;
+            border: 1px solid rgba(110,255,170,0.2);
+            position: relative;
+        }
+        .widget-card:hover {
+            transform: translateY(-6px);
+            border-color: #6effaa;
+            background: #1e2936;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+        }
+        .widget-card .delete-widget {
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+        .widget-card .delete-widget:hover { opacity: 1; transform: scale(1.2); }
+        .widget-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .widget-name { font-weight: 600; font-size: 1rem; color: #eef2ff; }
+        .widget-desc { font-size: 0.7rem; color: #8aa1b9; margin-top: 6px; word-break: break-all; }
+
+        /* ===== ДРУГИЕ СТИЛИ (поиск, перевод, результаты) ===== */
+        .search-section {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .search-box {
+            display: flex; gap: 0.75rem; background: #1e2936; border-radius: 80px; padding: 0.5rem;
+            border: 1px solid #334155; flex: 1; box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            max-width: 700px;
+        }
+        .search-box input { flex: 1; background: transparent; border: none; padding: 0.9rem 1.8rem; font-size: 1rem; color: white; outline: none; }
+        .search-box button { background: #2c3e50; border: none; border-radius: 60px; padding: 0 2rem; font-weight: bold; color: #6effaa; cursor: pointer; transition: 0.2s; }
+        .search-box button:hover { background: #6effaa; color: #0a0f14; box-shadow: 0 0 8px #6effaa; }
+        .quick-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+        .quick-link {
+            color: #cbd5e6;
+            text-decoration: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            background: rgba(30,41,54,0.5);
+            padding: 0.3rem 0.8rem;
+            border-radius: 30px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+        .quick-link:hover {
+            color: #6effaa;
+            border-color: #6effaa;
+            background: rgba(110,255,170,0.1);
+        }
+        .translator-container {
+            background: rgba(17,24,34,0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+        .lang-selectors { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+        .lang-selectors select { background: #1e2936; color: #6effaa; border: 1px solid #6effaa; padding: 0.5rem 1rem; border-radius: 40px; font-weight: bold; cursor: pointer; }
+        .swap-lang { background: transparent; border: 1px solid #6effaa; color: #6effaa; padding: 0.4rem 1rem; border-radius: 40px; cursor: pointer; font-size: 1.2rem; }
+        .translate-textarea { width: 100%; margin-bottom: 1rem; background: #0f1724; border: 1px solid #334155; border-radius: 24px; padding: 1rem; color: white; resize: vertical; font-family: inherit; }
+        .translate-button { background: #2c3e50; color: #6effaa; border: none; padding: 0.8rem; border-radius: 40px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 0.5rem; }
+        .translate-button:hover { background: #6effaa; color: #0a0f14; }
+        .other-translators { margin-top: 1.5rem; text-align: center; font-size: 0.8rem; }
+        .other-translators span { color: #cbd5e6; margin: 0 0.5rem; cursor: pointer; }
+        .other-translators span:hover { color: #6effaa; }
+        .results { margin-top: 2rem; text-align: left; }
+        .result-item {
+            background: rgba(17,24,34,0.8);
+            backdrop-filter: blur(4px);
+            border-radius: 24px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(110,255,170,0.1);
+            transition: 0.2s;
+        }
+        .result-item:hover { transform: translateX(6px); border-left: 4px solid #6effaa; }
+        .result-item .result-text { flex: 1; min-width: 0; }
+        .result-item a { font-size: 1.1rem; font-weight: 600; color: #6effaa; text-decoration: none; cursor: pointer; }
+        .result-item a:hover { text-decoration: underline; }
+        .result-url { font-size: 0.75rem; color: #6c86a3; margin: 6px 0; word-break: break-all; }
+        .result-snippet { font-size: 0.85rem; color: #b9c7db; }
+        .easter-egg-result {
+            border: 2px solid #ffd700;
+            background: rgba(255,215,0,0.1);
+            border-radius: 24px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .ai-answer {
+            background: rgba(110,255,170,0.08);
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #6effaa;
+            text-align: left;
+        }
+        .ai-answer-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; }
+        .ai-answer-header span:first-child { font-size: 1.5rem; }
+        .ai-answer-header .label { font-weight: bold; color: #6effaa; }
+        .ai-answer-content { color: #eef2ff; line-height: 1.6; }
+        .loading { text-align: center; color: #6effaa; margin: 2rem; }
+        footer { margin-top: 3rem; font-size: 0.7rem; color: #4a5b74; }
+        .no-internet { display: none; text-align: center; padding: 2rem; margin: 2rem 0; }
+
+        /* ===== СВЕТЛАЯ ТЕМА ===== */
+        body.light { background: #f0f4f8; color: #1a202c; }
+        body.light .search-box { background: #fff; border-color: #ccc; }
+        body.light .search-box input { color: #1a202c; }
+        body.light .quick-link { color: #2d3748; background: rgba(255,255,255,0.5); }
+        body.light .quick-link:hover { border-color: #2b6cb0; color: #2b6cb0; background: rgba(43,108,176,0.1); }
+        body.light .services-block { background: rgba(255,255,255,0.7); border-color: #a0aec0; }
+        body.light .widget-card { background: rgba(255,255,255,0.8); border-color: #e2e8f0; }
+        body.light .widget-card .widget-name { color: #1a202c; }
+        body.light .result-item { background: rgba(255,255,255,0.8); border-color: #e2e8f0; }
+        body.light .result-item a { color: #2b6cb0; }
+        body.light .result-url { color: #4a5568; }
+        body.light .result-snippet { color: #2d3748; }
+        body.light .modal { background: #ffffff; color: #1a202c; }
+        body.light .modal input, body.light .modal select { background: #f0f4f8; color: #1a202c; border-color: #ccc; }
+        body.light #menuButton { background: rgba(255,255,255,0.7); }
+        body.light #menuDropdown { background: rgba(255,255,255,0.95); }
+        body.light .menu-item { color: #1a202c; }
+        body.light .menu-item:hover { background: rgba(110,255,170,0.2); }
+        body.light #videoFloat { background: #ffffff; border-color: #6effaa; }
+        body.light #videoFloat .input-row input { background: #f0f4f8; color: #1a202c; border-color: #ccc; }
+        body.light #videoFloat .header .controls button { color: #1a202c; }
+
+        /* ===== ЗАГОЛОВОК ===== */
+        h1 {
+            font-size: 4rem; font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, #6effaa);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        h1:hover { transform: scale(1.02); text-shadow: 0 0 20px rgba(110,255,170,0.4); }
+        .sub { color: #8aa1b9; margin-bottom: 2rem; font-size: 1.1rem; }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 600px) {
+            #videoFloat { width: 90vw; right: 5vw; bottom: 10px; min-width: unset; }
+            #videoFloat iframe { min-height: 180px; }
+            .modal { padding: 1.5rem; }
+            h1 { font-size: 2.8rem; }
+            .quick-link { font-size: 0.8rem; padding: 0.2rem 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- КНОПКА МЕНЮ -->
+<div id="menuButton" onclick="toggleMenu()">☰</div>
+
+<!-- ВЫПАДАЮЩЕЕ МЕНЮ (без блокировки рекламы) -->
+<div id="menuDropdown">
+    <button class="menu-item" onclick="openSettings()"><span class="icon">⚙️</span> Настройки</button>
+    <button class="menu-item" onclick="openAddWidget()"><span class="icon">➕</span> Добавить виджет</button>
+    <button class="menu-item" onclick="openVideoPlayer()"><span class="icon">🎬</span> Видео в окне</button>
+    <button class="menu-item" onclick="toggleTheme()"><span class="icon">🌓</span> Сменить тему</button>
+</div>
+
+<!-- МОДАЛКА НАСТРОЕК -->
+<div id="settingsModal" class="modal-overlay">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('settingsModal')">✕</button>
+        <h2>⚙️ Настройки фона</h2>
+        <label>Загрузить изображение:</label>
+        <input type="file" id="bgFileInput" accept="image/*" onchange="loadBgImage(event)">
+        <label>Или выберите из стандартных:</label>
+        <div class="bg-preview-grid" id="bgPresets">
+            <div class="bg-preview-item" style="background: linear-gradient(135deg, #0a0f14, #1e2936);" onclick="setBgPreset('linear-gradient(135deg, #0a0f14, #1e2936)')"></div>
+            <div class="bg-preview-item" style="background: linear-gradient(135deg, #1a1a2e, #16213e);" onclick="setBgPreset('linear-gradient(135deg, #1a1a2e, #16213e)')"></div>
+            <div class="bg-preview-item" style="background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);" onclick="setBgPreset('linear-gradient(135deg, #0f2027, #203a43, #2c5364)')"></div>
+            <div class="bg-preview-item" style="background: linear-gradient(135deg, #2b2d42, #8d99ae);" onclick="setBgPreset('linear-gradient(135deg, #2b2d42, #8d99ae)')"></div>
+            <div class="bg-preview-item" style="background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);" onclick="setBgPreset('linear-gradient(135deg, #0f0c29, #302b63, #24243e)')"></div>
+            <div class="bg-preview-item" style="background: linear-gradient(135deg, #1d976c, #93f9b9);" onclick="setBgPreset('linear-gradient(135deg, #1d976c, #93f9b9)')"></div>
+            <div class="bg-preview-item" style="background: linear-gradient(135deg, #f093fb, #f5576c);" onclick="setBgPreset('linear-gradient(135deg, #f093fb, #f5576c)')"></div>
+            <div class="bg-preview-item" style="background: #1e2936;" onclick="setBgPreset('#1e2936')"></div>
+            <div class="bg-preview-item" style="background: #0a0f14;" onclick="setBgPreset('#0a0f14')"></div>
+        </div>
+        <button class="btn" onclick="closeModal('settingsModal')">Готово</button>
+    </div>
+</div>
+
+<!-- МОДАЛКА ДОБАВЛЕНИЯ ВИДЖЕТА (упрощена) -->
+<div id="addWidgetModal" class="modal-overlay">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('addWidgetModal')">✕</button>
+        <h2>➕ Новый виджет</h2>
+        <label>Название (необязательно):</label>
+        <input type="text" id="widgetNameInput" placeholder="Например, Мой сайт">
+        <label>URL сайта:</label>
+        <input type="text" id="widgetUrlInput" placeholder="example.com или https://example.com">
+        <button class="btn" onclick="addWidget()">Добавить</button>
+    </div>
+</div>
+
+<!-- ПЛАВАЮЩЕЕ ВИДЕО-ОКНО -->
+<div id="videoFloat">
+    <div class="header" id="videoDragHandle">
+        <span>🎬 Видео плеер</span>
+        <div class="controls">
+            <button onclick="toggleFullscreenVideo()" title="Полный экран">⛶</button>
+            <button class="close-video" onclick="closeVideoFloat()">✕</button>
+        </div>
+    </div>
+    <iframe id="videoIframe" src="" allowfullscreen></iframe>
+    <div class="input-row">
+        <input type="text" id="videoUrlInput" placeholder="Вставьте ссылку (YouTube, Rutube, VK)">
+        <button onclick="loadVideo()">▶</button>
+    </div>
+</div>
+
+<!-- ОСНОВНОЙ КОНТЕНТ -->
+<div class="container" id="app">
+    <h1 onclick="easterEgg()">⚡ Free Search</h1>
+    <div class="sub" id="subTitle">Глобальный поиск</div>
+    
+    <div class="search-section">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Что найдём сегодня?" autofocus>
+            <button id="searchBtn">Найти</button>
+        </div>
+    </div>
+    
+    <div class="quick-links">
+        <span class="quick-link" onclick="window.location.href='https://mail.google.com'">Gmail</span>
+        <span class="quick-link" onclick="window.location.href='https://youtube.com'">YouTube</span>
+        <span class="quick-link" onclick="window.location.href='https://drive.google.com'">Диск</span>
+        <span class="quick-link" onclick="window.location.href='https://translate.google.com'">Переводчик</span>
+        <span class="quick-link" onclick="openVideoPlayer()">▶ Видео плеер</span>
+        <!-- Кнопка "Настройки" в верхней панели УДАЛЕНА -->
+    </div>
+
+    <!-- БЛОК ВИДЖЕТОВ -->
+    <div class="services-block" id="widgetsBlock">
+        <div class="services-grid" id="widgetsGrid">
+            <!-- сюда рендерятся виджеты из localStorage -->
+        </div>
+    </div>
+    
+    <div id="translatorBlock" style="display: none;">
+        <div class="translator-container">
+            <div class="lang-selectors">
+                <select id="sourceLang"><option value="auto">Авто</option><option value="en">Английский</option><option value="ru">Русский</option><option value="ky">Кыргызча</option></select>
+                <button class="swap-lang" id="swapLangBtn">⇄</button>
+                <select id="targetLang"><option value="ru">Русский</option><option value="en">Английский</option><option value="ky">Кыргызча</option></select>
+            </div>
+            <textarea id="sourceText" class="translate-textarea" rows="4" placeholder="Введите текст для перевода..."></textarea>
+            <textarea id="targetText" class="translate-textarea" rows="4" placeholder="Перевод..." readonly></textarea>
+            <button id="translateBtn" class="translate-button">🌐 Перевести</button>
+        </div>
+        <div class="other-translators">
+            <span onclick="window.location.href='https://translate.google.com'">Google Translate</span> |
+            <span onclick="window.location.href='https://translate.yandex.ru'">Яндекс Перевод</span> |
+            <span onclick="window.location.href='https://www.deepl.com/translator'">DeepL</span>
+        </div>
+    </div>
+    
+    <div id="results" class="results"></div>
+
+    <div id="noInternetContainer" class="no-internet">
+        <div class="wifi-icon">
+            <svg viewBox="0 0 100 100" width="80" height="80">
+                <circle cx="50" cy="50" r="10" fill="#6effaa" />
+                <path d="M50 30 Q70 30 70 50" stroke="#6effaa" stroke-width="4" fill="none" />
+                <path d="M50 15 Q85 15 85 50" stroke="#6effaa" stroke-width="4" fill="none" />
+                <path d="M50 0 Q100 0 100 50" stroke="#6effaa" stroke-width="4" fill="none" opacity="0.3" />
+            </svg>
+        </div>
+        <p style="color:#8aa1b9; margin-top:1rem;">❌ Ошибка соединения с сервером. Проверьте, запущено ли приложение.</p>
+    </div>
+
+    <footer id="footer">🔎 DuckDuckGo + Wikipedia • Приватно</footer>
+</div>
+
+<script>
+    // ============================================================
+    // 1. МЕНЮ
+    // ============================================================
+    let menuOpen = false;
+    function toggleMenu() {
+        const dropdown = document.getElementById('menuDropdown');
+        menuOpen = !menuOpen;
+        dropdown.classList.toggle('active', menuOpen);
+    }
+    document.addEventListener('click', function(e) {
+        const menuBtn = document.getElementById('menuButton');
+        const dropdown = document.getElementById('menuDropdown');
+        if (!menuBtn.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('active');
+            menuOpen = false;
+        }
+    });
+
+    // ============================================================
+    // 2. НАСТРОЙКИ ФОНА
+    // ============================================================
+    function openSettings() {
+        closeModal('addWidgetModal');
+        document.getElementById('settingsModal').classList.add('active');
+        toggleMenu();
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+        el.addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+    });
+
+    function loadBgImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const dataUrl = e.target.result;
+            document.body.style.backgroundImage = `url(${dataUrl})`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+            localStorage.setItem('freesearch_bg', dataUrl);
+            localStorage.removeItem('freesearch_bg_preset');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function setBgPreset(value) {
+        document.body.style.backgroundImage = value;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        localStorage.setItem('freesearch_bg_preset', value);
+        localStorage.removeItem('freesearch_bg');
+        document.querySelectorAll('.bg-preview-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.bg-preview-item').forEach(el => {
+            if (el.style.background === value || el.style.backgroundImage === value) {
+                el.classList.add('active');
+            }
+        });
+    }
+
+    function restoreBg() {
+        const preset = localStorage.getItem('freesearch_bg_preset');
+        const image = localStorage.getItem('freesearch_bg');
+        if (image) {
+            document.body.style.backgroundImage = `url(${image})`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+        } else if (preset) {
+            document.body.style.backgroundImage = preset;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+        }
+    }
+    restoreBg();
+
+    // ============================================================
+    // 3. ВИДЖЕТЫ (localStorage) - упрощённое добавление
+    // ============================================================
+    let widgets = [];
+
+    function loadWidgets() {
+        const stored = localStorage.getItem('freesearch_widgets');
+        if (stored) {
+            try { widgets = JSON.parse(stored); } catch(e) { widgets = []; }
+        } else {
+            widgets = [
+                { name: 'Тундук', url: 'https://tunduk.kg', icon: '📰' },
+                { name: 'Курсы сома', url: 'https://www.nbkr.kg/', icon: '💰' },
+                { name: '2ГИС Бишкек', url: 'https://2gis.kg', icon: '🗺️' },
+                { name: 'Kaktus.kg', url: 'https://kaktus.kg', icon: '🌵' },
+                { name: 'DevKG.kg', url: 'https://devkg.kg', icon: '💻' },
+            ];
+            localStorage.setItem('freesearch_widgets', JSON.stringify(widgets));
+        }
+        renderWidgets();
+    }
+
+    function renderWidgets() {
+        const grid = document.getElementById('widgetsGrid');
+        if (!widgets || widgets.length === 0) {
+            grid.innerHTML = '<div style="color:#8aa1b9;padding:1rem;">Нет виджетов. Добавьте через меню ➕</div>';
+            return;
+        }
+        grid.innerHTML = widgets.map((w, idx) => `
+            <div class="widget-card" onclick="window.location.href='${w.url}'">
+                <button class="delete-widget" onclick="event.stopPropagation(); deleteWidget(${idx})">✕</button>
+                <div class="widget-icon">${w.icon || '🌐'}</div>
+                <div class="widget-name">${w.name}</div>
+                <div class="widget-desc">${w.url}</div>
+            </div>
+        `).join('');
+    }
+
+    function addWidget() {
+        let name = document.getElementById('widgetNameInput').value.trim();
+        let url = document.getElementById('widgetUrlInput').value.trim();
+        if (!url) { alert('Введите URL сайта'); return; }
+        // Автоматически добавляем https:// если нет протокола
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
+        // Если имя не указано, берем домен из URL
+        if (!name) {
+            try {
+                const domain = new URL(url).hostname;
+                name = domain.replace(/^www\./, '');
+            } catch(e) {
+                name = url;
+            }
+        }
+        const icon = '🌐'; // всегда стандартная иконка
+        widgets.push({ name, url, icon });
+        localStorage.setItem('freesearch_widgets', JSON.stringify(widgets));
+        renderWidgets();
+        closeModal('addWidgetModal');
+        document.getElementById('widgetNameInput').value = '';
+        document.getElementById('widgetUrlInput').value = '';
+    }
+
+    function deleteWidget(index) {
+        if (!confirm('Удалить виджет?')) return;
+        widgets.splice(index, 1);
+        localStorage.setItem('freesearch_widgets', JSON.stringify(widgets));
+        renderWidgets();
+    }
+
+    function openAddWidget() {
+        closeModal('settingsModal');
+        document.getElementById('addWidgetModal').classList.add('active');
+        toggleMenu();
+    }
+
+    loadWidgets();
+
+    // ============================================================
+    // 4. ПЛАВАЮЩЕЕ ВИДЕО-ОКНО
+    // ============================================================
+    function openVideoPlayer() {
+        const float = document.getElementById('videoFloat');
+        float.style.display = 'flex';
+        document.getElementById('videoUrlInput').focus();
+        toggleMenu();
+    }
+
+    function closeVideoFloat() {
+        document.getElementById('videoFloat').style.display = 'none';
+        document.getElementById('videoIframe').src = '';
+    }
+
+    function loadVideo() {
+        const input = document.getElementById('videoUrlInput');
+        let url = input.value.trim();
+        if (!url) return;
+        let embedUrl = '';
+        // Блокировка рекламы всегда включена (используем youtube-nocookie)
+        const adBlock = true;
+        if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+            const videoId = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\?|&|$)/);
+            if (videoId) {
+                const host = adBlock ? 'www.youtube-nocookie.com' : 'www.youtube.com';
+                embedUrl = `https://${host}/embed/${videoId[1]}?autoplay=1`;
+            }
+        } else if (url.includes('rutube.ru')) {
+            const videoId = url.match(/(?:video\/|embed\/)([a-f0-9]+)/);
+            if (videoId) {
+                embedUrl = `https://rutube.ru/embed/${videoId[1]}/?autoplay=1`;
+            }
+        } else if (url.includes('vk.com/video')) {
+            const match = url.match(/video(-?\d+)_(\d+)/);
+            if (match) {
+                embedUrl = `https://vk.com/video_ext.php?oid=${match[1]}&id=${match[2]}&autoplay=1`;
+            }
+        } else {
+            embedUrl = url;
+        }
+        if (!embedUrl) {
+            alert('Не удалось распознать ссылку. Поддерживаются YouTube, Rutube, VK.');
+            return;
+        }
+        document.getElementById('videoIframe').src = embedUrl;
+        document.getElementById('videoFloat').style.display = 'flex';
+    }
+
+    function toggleFullscreenVideo() {
+        const iframe = document.getElementById('videoIframe');
+        if (!iframe) return;
+        if (iframe.requestFullscreen) {
+            iframe.requestFullscreen().catch(err => {});
+        } else if (iframe.webkitRequestFullscreen) {
+            iframe.webkitRequestFullscreen();
+        } else {
+            alert('Полноэкранный режим не поддерживается в этом браузере.');
+        }
+    }
+
+    (function() {
+        const floatEl = document.getElementById('videoFloat');
+        const handle = document.getElementById('videoDragHandle');
+        let isDragging = false, offsetX, offsetY;
+        handle.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            const rect = floatEl.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+            e.preventDefault();
+        });
+        function onMove(e) {
+            if (!isDragging) return;
+            floatEl.style.left = (e.clientX - offsetX) + 'px';
+            floatEl.style.top = (e.clientY - offsetY) + 'px';
+            floatEl.style.right = 'auto';
+            floatEl.style.bottom = 'auto';
+        }
+        function onUp() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+    })();
+
+    // ============================================================
+    // 5. ТЕМА
+    // ============================================================
+    function toggleTheme() {
+        const isLight = document.body.classList.toggle('light');
+        localStorage.setItem('freesearch_theme', isLight ? 'light' : 'dark');
+        toggleMenu();
+    }
+    (function() {
+        const theme = localStorage.getItem('freesearch_theme') || 'dark';
+        if (theme === 'light') document.body.classList.add('light');
+    })();
+
+    // ============================================================
+    // 6. ОСТАЛЬНЫЕ ФУНКЦИИ (поиск, перевод, пасхалка и т.д.)
+    // ============================================================
+    const jokes = [
+        "🇰🇬 Кыргызстан – страна, где даже горы улыбаются!",
+        "🐎 В Кыргызстане лошади умеют танцевать күү!",
+        "🏔️ Если вы не были в Кыргызстане, вы не видели настоящего неба!",
+        "🍽️ Бешбармак – это не еда, это искусство!",
+        "🎵 Манас – эпос, который длиннее, чем все сериалы мира!"
+    ];
+    function easterEgg() {
+        const joke = jokes[Math.floor(Math.random() * jokes.length)];
+        alert(joke);
+    }
+
+    let currentLang = localStorage.getItem('freesearch_lang') || 'ru';
+    const translations = {
+        ky: { subTitle: "Глобалдык издөө", searchPlaceholder: "Эмне издебиз?", searchBtn: "Издөө", footer: "🔎 Купуя" },
+        ru: { subTitle: "Глобальный поиск", searchPlaceholder: "Что найдём сегодня?", searchBtn: "Найти", footer: "🔎 Приватно" },
+        en: { subTitle: "Global Search", searchPlaceholder: "What shall we find?", searchBtn: "Search", footer: "🔎 Private" }
+    };
+    function applyUILanguage(lang) {
+        const t = translations[lang];
+        if (t) {
+            document.getElementById('subTitle').innerText = t.subTitle;
+            document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+            document.getElementById('searchBtn').innerText = t.searchBtn;
+            document.getElementById('footer').innerHTML = t.footer;
+        }
+        localStorage.setItem('freesearch_lang', lang);
+        currentLang = lang;
+    }
+    applyUILanguage(currentLang);
+
+    async function translateText(text, source, target) {
+        if (!text) return '';
+        try {
+            const res = await fetch('/api/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, source, target }) });
+            const data = await res.json();
+            return data.translated || 'Ошибка';
+        } catch(e) { return 'Ошибка соединения'; }
+    }
+
+    let translatorVisible = false;
+    function showTranslator() { document.getElementById('translatorBlock').style.display = 'block'; translatorVisible = true; }
+    function hideTranslator() { document.getElementById('translatorBlock').style.display = 'none'; translatorVisible = false; }
+
+    async function performTranslation() {
+        const source = document.getElementById('sourceLang').value, target = document.getElementById('targetLang').value, text = document.getElementById('sourceText').value;
+        if (!text) return;
+        document.getElementById('targetText').value = 'Переводим...';
+        const translated = await translateText(text, source, target);
+        document.getElementById('targetText').value = translated;
+    }
+
+    function showNoInternet() {
+        document.getElementById('noInternetContainer').style.display = 'block';
+        document.getElementById('results').innerHTML = '';
+    }
+    function hideNoInternet() {
+        document.getElementById('noInternetContainer').style.display = 'none';
+    }
+
+    const searchInput = document.getElementById('searchInput'), resultsDiv = document.getElementById('results');
+    let isSearching = false;
+
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+
+    function checkEasterEgg(query) {
+        const lower = query.toLowerCase();
+        const keywords = ['кыргызстан', 'бишкек', 'манас', 'ош', 'иссык-куль', 'кыргыз'];
+        for (let word of keywords) {
+            if (lower.includes(word)) {
+                return {
+                    title: "🇰🇬 Пасхалка про Кыргызстан!",
+                    url: "#",
+                    snippet: "Знаете ли вы? Кыргызстан – это жемчужина Центральной Азии. Здесь находится озеро Иссык-Куль, второе по величине горное озеро в мире!"
+                };
+            }
+        }
+        if (lower === 'кутман') {
+            return {
+                title: "🎉 Кутман!",
+                url: "#",
+                snippet: "Салам, друг! Ты нашёл секретную пасхалку. Пусть удача всегда будет с тобой!"
+            };
+        }
+        return null;
+    }
+
+    async function performSearch() {
+        if (isSearching) return;
+        const query = searchInput.value.trim();
+        if (!query) return;
+        hideTranslator();
+        hideNoInternet();
+        isSearching = true;
+        resultsDiv.innerHTML = '<div class="loading">🔍 Ищем...</div>';
+
+        const easter = checkEasterEgg(query);
+        try {
+            const response = await fetch('/api/combined', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, lang: currentLang })
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const data = await response.json();
+
+            let html = '';
+            if (easter) {
+                html += `<div class="easter-egg-result">🎉 <strong>${easter.title}</strong><br>${easter.snippet}</div>`;
+            }
+
+            if (data.ai_answer) {
+                html += `
+                    <div class="ai-answer">
+                        <div class="ai-answer-header">
+                            <span>🤖</span>
+                            <span class="label">AI ответ</span>
+                        </div>
+                        <div class="ai-answer-content">${escapeHtml(data.ai_answer)}</div>
+                    </div>
+                `;
+            }
+
+            if (data.search_results && data.search_results.length > 0) {
+                for (let item of data.search_results) {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-content">
+                                <div class="result-text">
+                                    <a href="#" onclick="window.location.href='${escapeHtml(item.url)}'; return false;">🔗 ${escapeHtml(item.title)}</a>
+                                    <div class="result-url">${escapeHtml(item.url)}</div>
+                                    <div class="result-snippet">${escapeHtml(item.snippet)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                resultsDiv.innerHTML = html;
+            } else {
+                if (!easter && !data.ai_answer) {
+                    resultsDiv.innerHTML = '<div style="text-align:center;color:#8aa1b9;padding:2rem;">😕 Ничего не найдено. Попробуйте изменить запрос.</div>';
+                } else {
+                    resultsDiv.innerHTML = html;
+                }
+            }
+        } catch (err) {
+            console.error('Ошибка запроса:', err);
+            if (easter) {
+                resultsDiv.innerHTML = `<div class="easter-egg-result">🎉 <strong>${easter.title}</strong><br>${easter.snippet}</div>
+                                        <div style="color:#ff6b6b;margin-top:1rem;">⚠️ Не удалось получить результаты поиска из-за проблем с сетью.</div>`;
+                hideNoInternet();
+            } else {
+                showNoInternet();
+            }
+        } finally {
+            isSearching = false;
+        }
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+    document.getElementById('translateBtn').addEventListener('click', performTranslation);
+    document.getElementById('swapLangBtn').addEventListener('click', () => {
+        const src = document.getElementById('sourceLang'), tgt = document.getElementById('targetLang');
+        const temp = src.value; src.value = tgt.value; tgt.value = temp;
+        performTranslation();
+    });
+    searchInput.addEventListener('input', function() {
+        const q = this.value.trim().toLowerCase();
+        if (q.includes('перевод') || q.includes('translate')) showTranslator();
+        else if (!translatorVisible) hideTranslator();
+    });
+
+    document.getElementById('videoUrlInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') loadVideo();
+    });
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'freesearch_theme') {
+            document.body.classList.toggle('light', e.newValue === 'light');
+        }
+        if (e.key === 'freesearch_lang') {
+            applyUILanguage(e.newValue);
+        }
+        if (e.key === 'freesearch_widgets') {
+            loadWidgets();
+        }
+    });
+</script>
+</body>
+</html>
