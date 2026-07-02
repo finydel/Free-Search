@@ -11,7 +11,7 @@
 
 <img width="1920" height="1080" alt="2026-06-24_01-04-47" src="https://github.com/user-attachments/assets/e6fbbf22-4aa4-4746-ab0a-9ff7cf6619e1" />
 
-#Free-Search
+#free-search
 
 
 🚀FreeSearch — это десктопное приложение на Qt и Flask, которое объединяет поиск, перевод, виджеты, мониторинг страниц и мультимедиа в одном окне. Работает на движке Chromium, не шпионит за вами и хранит все данные локально.
